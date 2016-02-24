@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -60,7 +61,7 @@ public class PhotoGalleryFragment extends Fragment {
         setRetainInstance(true);
         if (getArguments() != null) {
         }
-        new FetchItemsTask().execute();
+        new FetchItemsTask().execute(1);//先加载第一页
 
         Handler responseHandler= new Handler();
         mThumbnailDownloader = new ThumbnailDownloader<>(responseHandler);
@@ -91,7 +92,15 @@ public class PhotoGalleryFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_photo_gallery, container, false);
         mRecyclerView = (RecyclerView) view.findViewById(R.id.fragment_photo_gallery_recycler_view);
-        mRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 3));
+        LinearLayoutManager layoutManager= new GridLayoutManager(getContext(), 3);
+        mRecyclerView.setLayoutManager(layoutManager);
+        mRecyclerView.addOnScrollListener(new InfiniteRecyclerOnScrollListener(layoutManager) {
+            @Override
+            public void onLoadMore(int current_page) {
+                new FetchItemsTask().execute(current_page);
+            }
+        });
+
         setupAdapter();
         return view;
     }
@@ -103,9 +112,9 @@ public class PhotoGalleryFragment extends Fragment {
         mThumbnailDownloader.clearQueue();
     }
 
-    private class FetchItemsTask extends AsyncTask<Void, Void, List<GalleryItem>> {
+    private class FetchItemsTask extends AsyncTask<Integer, Void, List<GalleryItem>> {
         @Override
-        protected List<GalleryItem> doInBackground(Void... params) {
+        protected List<GalleryItem> doInBackground(Integer... params) {
             /*try {
                 String result = new FlickrFetchr().getUrlString("http://www.baidu.com");
                 Log.i(TAG,"Fetched contents of URL: " + result);
@@ -113,7 +122,7 @@ public class PhotoGalleryFragment extends Fragment {
             {
                 Log.e(TAG,"Failed to fetch URL: ", ioe);
             }*/
-            return new FlickrFetchr().fetchItems();
+            return new FlickrFetchr().fetchItems(params[0]);
         }
 
         @Override

@@ -50,6 +50,10 @@ public class FlickrFetchr {
     }
 
     public List<GalleryItem> fetchItems() {
+        return this.fetchItems(0);
+    }
+
+    public List<GalleryItem> fetchItems(int page) {
         List<GalleryItem> items = new ArrayList<>();
         try {
             //String url = Uri.parse("https://api.flickr.com/services/feeds/photos_public.gne")
@@ -60,6 +64,7 @@ public class FlickrFetchr {
                     .appendQueryParameter("format", "json")
                     .appendQueryParameter("nojsoncallback", "1")
                     .appendQueryParameter("extras", "url_s")
+                    .appendQueryParameter("page",""+page)
                     .build().toString();
             String jsonString = getUrlString(url);
             Log.i(TAG, "Received JSON: " + jsonString);
