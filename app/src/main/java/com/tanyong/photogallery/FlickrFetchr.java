@@ -50,7 +50,7 @@ public class FlickrFetchr {
     }
 
     public List<GalleryItem> fetchItems() {
-        return this.fetchItems(0);
+        return this.fetchItems(1);
     }
 
     public List<GalleryItem> fetchItems(int page) {

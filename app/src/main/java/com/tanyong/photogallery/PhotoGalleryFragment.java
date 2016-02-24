@@ -127,8 +127,9 @@ public class PhotoGalleryFragment extends Fragment {
 
         @Override
         protected void onPostExecute(List<GalleryItem> items) {
-            mGalleryItems = items;
-            setupAdapter();
+            mGalleryItems.addAll(items);
+            //setupAdapter();
+            mRecyclerView.getAdapter().notifyDataSetChanged();
         }
 
     }
