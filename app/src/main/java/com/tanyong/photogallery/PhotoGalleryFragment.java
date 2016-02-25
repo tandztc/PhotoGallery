@@ -13,9 +13,13 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.support.v7.widget.SearchView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -59,17 +63,22 @@ public class PhotoGalleryFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
+        setHasOptionsMenu(true);
         if (getArguments() != null) {
         }
-        new FetchItemsTask().execute(1);//先加载第一页
+        updateItems();
 
-        Handler responseHandler= new Handler();
+        Handler responseHandler = new Handler();
         mThumbnailDownloader = new ThumbnailDownloader<>(responseHandler);
         mThumbnailDownloader.setThumbnailDownloadListener(
                 new ThumbnailDownloader.ThumbnailDownloadListener<PhotoHolder>() {
                     @Override
                     public void onThumbnailDownloaded(PhotoHolder target, Bitmap thumbnail) {
-                        Drawable drawable=new BitmapDrawable(getResources(),thumbnail);
+                        if (!isAdded())
+                        {
+                            return;
+                        }
+                        Drawable drawable = new BitmapDrawable(getResources(), thumbnail);
                         target.bindDrawable(drawable);
                     }
                 }
@@ -87,17 +96,59 @@ public class PhotoGalleryFragment extends Fragment {
     }
 
     @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.fragment_photo_gallery, menu);
+        MenuItem searchItem = menu.findItem(R.id.menu_item_search);
+        final SearchView searchView = (SearchView) searchItem.getActionView();
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                Log.d(TAG, "QueryTextSubmit: " + query);
+                QueryPreferences.setStoredQuery(getActivity(), query);
+                updateItems();
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                Log.d(TAG, "onQueryTextChange: " + newText);
+                return false;
+            }
+        });
+        searchView.setOnSearchClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                searchView.setQuery(QueryPreferences.getStoredQuery(getContext()),false);
+            }
+        });
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_item_clear:
+                QueryPreferences.setStoredQuery(getActivity(), null);
+                updateItems();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_photo_gallery, container, false);
         mRecyclerView = (RecyclerView) view.findViewById(R.id.fragment_photo_gallery_recycler_view);
-        LinearLayoutManager layoutManager= new GridLayoutManager(getContext(), 3);
+        LinearLayoutManager layoutManager = new GridLayoutManager(getContext(), 3);
         mRecyclerView.setLayoutManager(layoutManager);
         mRecyclerView.addOnScrollListener(new InfiniteRecyclerOnScrollListener(layoutManager) {
             @Override
             public void onLoadMore(int current_page) {
-                new FetchItemsTask().execute(current_page);
+                updateItems(current_page);
             }
         });
 
@@ -105,34 +156,54 @@ public class PhotoGalleryFragment extends Fragment {
         return view;
     }
 
+    private void updateItems() {
+        updateItems(1); //默认加载第一页
+    }
+
+    private void updateItems(int page) {
+        Log.i(TAG, "updateItems, page: " + page);
+        new FetchItemsTask(QueryPreferences.getStoredQuery(getActivity())).execute(page);
+    }
+
     @Override
-    public void  onDestroyView()
-    {
+    public void onDestroyView() {
         super.onDestroyView();
         mThumbnailDownloader.clearQueue();
     }
 
     private class FetchItemsTask extends AsyncTask<Integer, Void, List<GalleryItem>> {
+        private String mQuery;
+        private int mPage;
+
+        public FetchItemsTask(String query) {
+            mQuery = query;
+        }
+
         @Override
         protected List<GalleryItem> doInBackground(Integer... params) {
-            /*try {
-                String result = new FlickrFetchr().getUrlString("http://www.baidu.com");
-                Log.i(TAG,"Fetched contents of URL: " + result);
-            } catch (IOException ioe)
-            {
-                Log.e(TAG,"Failed to fetch URL: ", ioe);
-            }*/
-            return new FlickrFetchr().fetchItems(params[0]);
+            mPage = params[0];
+            if (mQuery == null) {
+                return new FlickrFetchr().fetchRecentPhotos(mPage);
+            } else {
+                return new FlickrFetchr().searchPhotos(mQuery, mPage);
+            }
+            //return new FlickrFetchr().searchPhotos("rei");
         }
 
         @Override
         protected void onPostExecute(List<GalleryItem> items) {
-            mGalleryItems.addAll(items);
-            //setupAdapter();
-            mRecyclerView.getAdapter().notifyDataSetChanged();
+            if (mPage > 1) {
+                mGalleryItems.addAll(items);
+                //setupAdapter();
+                mRecyclerView.getAdapter().notifyDataSetChanged();
+            } else {
+                mGalleryItems = items;
+                setupAdapter();
+            }
         }
 
     }
+
 
     private class PhotoHolder extends RecyclerView.ViewHolder {
         private TextView mTitleTextView;
@@ -150,8 +221,7 @@ public class PhotoGalleryFragment extends Fragment {
             mItemImageView.setImageResource(R.mipmap.ic_launcher);
         }
 
-        public void bindDrawable(Drawable drawable)
-        {
+        public void bindDrawable(Drawable drawable) {
             mItemImageView.setImageDrawable(drawable);
         }
     }
