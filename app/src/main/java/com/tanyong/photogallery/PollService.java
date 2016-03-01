@@ -22,7 +22,7 @@ import java.util.List;
 public class PollService extends IntentService {
     private static final String TAG = "PollService";
 
-    private static final long POLL_INTERVAL = AlarmManager.INTERVAL_FIFTEEN_MINUTES;
+    private static final long POLL_INTERVAL = 60000;//AlarmManager.INTERVAL_FIFTEEN_MINUTES;
 
     public static Intent newIntent(Context context) {
         return new Intent(context, PollService.class);
@@ -41,6 +41,8 @@ public class PollService extends IntentService {
             alarmManager.cancel(pi);
             pi.cancel();
         }
+
+        QueryPreferences.setAlarmOn(context, isOn);
     }
 
     public static boolean isServiceAlarmOn(Context context) {
@@ -78,10 +80,10 @@ public class PollService extends IntentService {
         } else {
             Log.i(TAG, "Got a new result: " + resultId);
 
-            Resources resources=getResources();
-            Intent i=PhotoGalleryActivity.newIntent(this);
-            PendingIntent pi=PendingIntent.getActivity(this, 0, i, 0);
-            Notification notification=new NotificationCompat.Builder(this)
+            Resources resources = getResources();
+            Intent i = PhotoGalleryActivity.newIntent(this);
+            PendingIntent pi = PendingIntent.getActivity(this, 0, i, 0);
+            Notification notification = new NotificationCompat.Builder(this)
                     .setTicker(resources.getString(R.string.new_pictures_title))
                     .setSmallIcon(android.R.drawable.ic_menu_report_image)
                     .setContentTitle(resources.getString(R.string.new_pictures_title))
@@ -90,7 +92,7 @@ public class PollService extends IntentService {
                     .setAutoCancel(true)
                     .build();
 
-            NotificationManagerCompat notificationManager= NotificationManagerCompat.from(this);
+            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
             notificationManager.notify(0, notification);
         }
 
