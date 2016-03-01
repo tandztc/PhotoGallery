@@ -26,8 +26,11 @@ public class PollService extends IntentService {
     private static final long POLL_INTERVAL = 60000;//AlarmManager.INTERVAL_FIFTEEN_MINUTES;
 
     public static final String ACTION_SHOW_NOTIFICATION = "com.tanyong.photogallery.SHOW_NOTIFICATION";
+
     public static final String REQUEST_CODE = "REQUEST_CODE";
     public static final String NOTIFICATION = "NOTIFICATION";
+
+    public static final String PERM_PRIVATE = "com.tanyong.photogallery.PRIVATE";
 
     public static Intent newIntent(Context context) {
         return new Intent(context, PollService.class);
@@ -111,7 +114,7 @@ public class PollService extends IntentService {
         intent.putExtra(REQUEST_CODE, requestCode);
         intent.putExtra(NOTIFICATION, notification);
         //sendBroadcast(intent);
-        sendOrderedBroadcast(intent, null, null, null, Activity.RESULT_OK, null, null);
+        sendOrderedBroadcast(intent, PERM_PRIVATE, null, null, Activity.RESULT_OK, null, null);
     }
 
     private boolean isNetworkAvailableAndConnected() {
