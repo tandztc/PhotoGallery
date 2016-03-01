@@ -1,5 +1,6 @@
 package com.tanyong.photogallery;
 
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.IntentService;
 import android.app.Notification;
@@ -23,6 +24,10 @@ public class PollService extends IntentService {
     private static final String TAG = "PollService";
 
     private static final long POLL_INTERVAL = 60000;//AlarmManager.INTERVAL_FIFTEEN_MINUTES;
+
+    public static final String ACTION_SHOW_NOTIFICATION = "com.tanyong.photogallery.SHOW_NOTIFICATION";
+    public static final String REQUEST_CODE = "REQUEST_CODE";
+    public static final String NOTIFICATION = "NOTIFICATION";
 
     public static Intent newIntent(Context context) {
         return new Intent(context, PollService.class);
@@ -92,12 +97,21 @@ public class PollService extends IntentService {
                     .setAutoCancel(true)
                     .build();
 
-            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
-            notificationManager.notify(0, notification);
+            //NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+            //notificationManager.notify(0, notification);
+            showBackgroundNotification(0, notification);
         }
 
 
         QueryPreferences.setLastResultId(this, resultId);
+    }
+
+    private void showBackgroundNotification(int requestCode, Notification notification) {
+        Intent intent = new Intent(ACTION_SHOW_NOTIFICATION);
+        intent.putExtra(REQUEST_CODE, requestCode);
+        intent.putExtra(NOTIFICATION, notification);
+        //sendBroadcast(intent);
+        sendOrderedBroadcast(intent, null, null, null, Activity.RESULT_OK, null, null);
     }
 
     private boolean isNetworkAvailableAndConnected() {

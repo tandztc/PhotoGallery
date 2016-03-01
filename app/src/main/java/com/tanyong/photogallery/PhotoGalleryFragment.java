@@ -31,7 +31,7 @@ import java.util.List;
  * Use the {@link PhotoGalleryFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class PhotoGalleryFragment extends Fragment {
+public class PhotoGalleryFragment extends VisibleFragment {
 
     private static final String TAG = "PhotoGalleryFragment";
 
