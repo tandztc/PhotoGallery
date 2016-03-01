@@ -1,6 +1,7 @@
 package com.tanyong.photogallery;
 
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -221,16 +222,25 @@ public class PhotoGalleryFragment extends VisibleFragment {
     private class PhotoHolder extends RecyclerView.ViewHolder {
         private TextView mTitleTextView;
         private ImageView mItemImageView;
+        private GalleryItem mGalleryItem;
 
         public PhotoHolder(View itemView) {
             super(itemView);
             //mTitleTextView = (TextView) itemView;
             mItemImageView = (ImageView) itemView.findViewById(R.id.fragment_photo_gallery_image_view);
+            mItemImageView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, mGalleryItem.getPhotoPageUri());
+                    startActivity(intent);
+                }
+            });
         }
 
         public void bindGalleryItem(GalleryItem item) {
             //mTitleTextView.setText(item.toString());
             //Drawable drawable=getResources().getDrawable(R.mipmap.ic_launcher);
+            mGalleryItem = item;
             mItemImageView.setImageResource(R.mipmap.ic_launcher);
         }
 
