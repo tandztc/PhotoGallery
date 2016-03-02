@@ -84,6 +84,16 @@ public class PhotoPageFragment extends VisibleFragment {
                 return false;
             }
         });
+        ((PhotoPageActivity) getActivity()).setOnBackPressedListener(new PhotoPageActivity.OnBackPressedListener() {
+            @Override
+            public void onBackPressed() {
+                if (mWebView.canGoBack()) {
+                    mWebView.goBack();
+                } else {
+                    ((PhotoPageActivity) getActivity()).forceBack();
+                }
+            }
+        });
         mWebView.loadUrl(mUri.toString());
 
 
