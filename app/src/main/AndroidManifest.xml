@@ -2,7 +2,8 @@
 <manifest package="com.tanyong.photogallery"
           xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <permission android:name="com.tanyong.photogallery.PRIVATE"
+    <permission
+        android:name="com.tanyong.photogallery.PRIVATE"
         android:protectionLevel="signature"/>
 
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -23,7 +24,10 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <activity android:name=".PhotoPageActivity"/>
+
         <service android:name=".PollService"/>
+
         <receiver android:name=".StartupReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
